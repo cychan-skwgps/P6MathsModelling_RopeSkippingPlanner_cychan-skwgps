@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 跳繩操場模擬器</title>
+    <!-- 引入 Three.js 與 Tailwind CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; overflow-x: hidden; }
+        #canvas-3d { width: 100%; height: 600px; cursor: move; border-radius: 1rem; }
+        
+        /* 繪圖容器 */
+        .playground-outer-container {
+            position: relative;
+            padding: 80px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .playground-2d { 
+            position: relative;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* 統一工程風格標注 */
+        .dim-line {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            color: #334155;
+        }
+
+        /* 水平標注 (長度) */
+        .dim-horizontal {
+            top: -50px;
+            left: 0;
+            width: 100%;
+            height: 30px;
+        }
+        .dim-horizontal::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1.5px;
+            background: #334155;
+        }
+        .dim-horizontal::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            border-right: 12px solid #334155;
+        }
+        .dim-horizontal .arrow-right {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            border-left: 12px solid #334155;
+        }
+
+        /* 垂直標注 (闊度) */
+        .dim-vertical {
+            left: -65px;
+            top: 0;
+            height: 100%;
+            width: 30px;
+        }
+        .dim-vertical::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1.5px;
+            background: #334155;
+        }
+        .dim-vertical::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 12px solid #334155;
+        }
+        .dim-vertical .arrow-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 12px solid #334155;
+        }
+
+        /* 數值文字樣式 */
+        .dim-text {
+            padding: 0 10px;
+            font-size: 28px; 
+            font-weight: 900;
+            color: #0f172a;
+            z-index: 5;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .student-node {
+            position: absolute;
+            cursor: move;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.1s, background-color 0.3s;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            z-index: 10;
+            touch-action: none;
+        }
+        .student-node:active { transform: scale(1.1); z-index: 100; }
+        
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #ef4444; }
+        input:checked + .slider:before { transform: translateX(22px); }
+    </style>
+</head>
+<body class="p-4 md:p-6">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-extrabold text-emerald-700">🏃‍♂️ 跳繩空間模擬器</h1>
+                <p class="text-gray-500">規劃你的跳繩隊伍，觀察 3D 跳躍效果</p>
+            </div>
+            <div class="flex gap-2">
+                <button id="view-mode-btn" onclick="toggleView()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-full font-bold shadow-lg transition-all flex items-center gap-2">
+                    <span id="btn-icon">🚀</span> <span id="btn-text">進入 3D 觀察</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- 工具列 -->
+            <div id="sidebar" class="lg:col-span-1 space-y-6">
+                
+                <!-- 操場尺寸 -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-emerald-100">
+                    <h3 class="font-bold text-emerald-800 mb-3 flex items-center gap-2">📏 操場大小 (米)</h3>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="text-xs text-gray-400">長度</label>
+                            <input type="number" id="pg-w" value="14" min="5" max="60" oninput="resizePlayground()" class="w-full border-b-2 border-gray-100 p-2 focus:border-emerald-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400">闊度</label>
+                            <input type="number" id="pg-h" value="15" min="5" max="40" oninput="resizePlayground()" class="w-full border-b-2 border-gray-100 p-2 focus:border-emerald-500 outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <button onclick="setQuickSize(28, 15)" class="text-[10px] bg-emerald-50 text-emerald-600 py-1 rounded hover:bg-emerald-100 transition font-bold border border-emerald-200">全個籃球場</button>
+                        <button onclick="setQuickSize(14, 15)" class="text-[10px] bg-emerald-50 text-emerald-600 py-1 rounded hover:bg-emerald-100 transition font-bold border border-emerald-200">半個籃球場</button>
+                    </div>
+                </div>
+
+                <!-- 顏色自定義 -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2">🎨 顏色設定</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm">畫布顏色</label>
+                            <input type="color" id="color-canvas" value="#e0f2fe" onchange="updateColors()" class="cursor-pointer">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm font-medium">地面顏色</label>
+                            <input type="color" id="color-floor" value="#8B6057" onchange="updateColors()" class="cursor-pointer">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm font-medium">邊界顏色</label>
+                            <input type="color" id="color-border" value="#E6BF7C" onchange="updateColors()" class="cursor-pointer">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm">學生顏色</label>
+                            <input type="color" id="color-student" value="#f97316" class="cursor-pointer">
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                            <label class="text-sm font-bold text-red-600">碰撞警示</label>
+                            <label class="switch">
+                                <input type="checkbox" id="collision-toggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 增加學生 -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-blue-100">
+                    <h3 class="font-bold text-blue-800 mb-3">🧍 增加跳繩學生</h3>
+                    <div class="space-y-4">
+                        <div class="p-3 bg-blue-50 rounded-xl">
+                            <label class="block text-xs font-bold text-blue-600 mb-2">設定佔位大小 (米):</label>
+                            <input type="number" id="student-size" value="2" step="0.5" min="0.5" class="w-full p-2 rounded border-none shadow-inner mb-3">
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="addStudent('square')" class="bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 font-bold">正方形</button>
+                                <button onclick="addStudent('circle')" class="bg-indigo-500 text-white py-2 rounded-lg hover:bg-indigo-600 font-bold">圓形</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="clearCanvas()" class="w-full py-2 text-red-400 hover:text-red-600 text-sm font-medium">清空所有學生</button>
+            </div>
+
+            <!-- 主畫布 -->
+            <div class="lg:col-span-3">
+                <!-- 2D 設計區 -->
+                <div id="view-2d" class="rounded-3xl min-h-[600px] flex items-center justify-center overflow-auto transition-colors duration-300">
+                    <div class="playground-outer-container">
+                        <!-- 操場主體 -->
+                        <div id="playground-2d" class="playground-2d">
+                            <!-- 尺寸標注線 -->
+                            <div class="dim-line dim-horizontal">
+                                <span class="dim-text" id="label-w">14m</span>
+                                <span class="arrow-right"></span>
+                            </div>
+                            <div class="dim-line dim-vertical">
+                                <span class="dim-text" id="label-h" style="transform: rotate(90deg);">15m</span>
+                                <span class="arrow-bottom"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3D 觀察區 -->
+                <div id="view-3d" class="hidden">
+                    <div id="canvas-3d" class="shadow-2xl"></div>
+                    <div class="mt-4 p-4 bg-white rounded-xl flex flex-wrap gap-6 text-sm text-gray-600">
+                        <span class="flex items-center gap-1">🖱️ 旋轉: 左鍵</span>
+                        <span class="flex items-center gap-1">🔍 縮放: 滾輪</span>
+                        <span class="flex items-center gap-1">🖐️ 移動: 右鍵</span>
+                        <span class="flex items-center gap-1 text-red-500 font-bold">⚠️ 紅色提示: 空間碰撞</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCALE = 25; 
+        const pg2d = document.getElementById('playground-2d');
+        const view2dContainer = document.getElementById('view-2d');
+        const labelW = document.getElementById('label-w');
+        const labelH = document.getElementById('label-h');
+        
+        let students = [];
+        let is3D = false;
+        let lastSpawnX = 10;
+        let spawnStep = 40;
+
+        function setQuickSize(w, h) {
+            document.getElementById('pg-w').value = w;
+            document.getElementById('pg-h').value = h;
+            resizePlayground();
+        }
+
+        function resizePlayground() {
+            const w = document.getElementById('pg-w').value;
+            const h = document.getElementById('pg-h').value;
+            pg2d.style.width = (w * SCALE) + 'px';
+            pg2d.style.height = (h * SCALE) + 'px';
+            
+            labelW.innerText = `${w}m`;
+            labelH.innerText = `${h}m`;
+            
+            updateColors(); 
+        }
+
+        function updateColors() {
+            const floorColor = document.getElementById('color-floor').value;
+            const canvasColor = document.getElementById('color-canvas').value;
+            const borderColor = document.getElementById('color-border').value;
+            
+            pg2d.style.backgroundColor = floorColor;
+            pg2d.style.border = `15px solid ${borderColor}`;
+            view2dContainer.style.backgroundColor = canvasColor;
+            
+            document.querySelectorAll('.dim-text').forEach(t => {
+                t.style.backgroundColor = canvasColor;
+            });
+        }
+
+        function addStudent(type) {
+            const size = parseFloat(document.getElementById('student-size').value);
+            const studentColor = document.getElementById('color-student').value;
+            const id = Date.now();
+            const el = document.createElement('div');
+            el.className = 'student-node';
+            el.dataset.id = id;
+            el.style.width = (size * SCALE) + 'px';
+            el.style.height = (size * SCALE) + 'px';
+            
+            const pgRect = pg2d.getBoundingClientRect();
+            if (lastSpawnX + (size * SCALE) > pgRect.width) {
+                lastSpawnX = 10;
+            }
+            el.style.left = lastSpawnX + 'px';
+            el.style.top = '20px';
+            lastSpawnX += spawnStep;
+
+            el.style.backgroundColor = studentColor;
+            el.style.borderRadius = type === 'circle' ? '50%' : '8px';
+            el.innerHTML = `<span>${size}m</span>`;
+
+            el.onmousedown = (e) => {
+                if (is3D) return;
+                e.preventDefault();
+                e.stopPropagation();
+
+                const rect = el.getBoundingClientRect();
+                const offsetX = e.clientX - rect.left;
+                const offsetY = e.clientY - rect.top;
+
+                const onMouseMove = (moveEvent) => {
+                    const pgRect = pg2d.getBoundingClientRect();
+                    let x = moveEvent.clientX - pgRect.left - offsetX;
+                    let y = moveEvent.clientY - pgRect.top - offsetY;
+
+                    const maxX = pgRect.width - el.offsetWidth;
+                    const maxY = pgRect.height - el.offsetHeight;
+                    x = Math.max(0, Math.min(x, maxX));
+                    y = Math.max(0, Math.min(y, maxY));
+
+                    el.style.left = x + 'px';
+                    el.style.top = y + 'px';
+                };
+
+                const onMouseUp = () => {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                };
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            };
+
+            el.ondblclick = () => {
+                students = students.filter(s => s.id !== id);
+                el.remove();
+            };
+
+            pg2d.appendChild(el);
+            students.push({ id, type, size, el, color: studentColor });
+        }
+
+        function clearCanvas() {
+            const nodes = pg2d.querySelectorAll('.student-node');
+            nodes.forEach(n => n.remove());
+            students = [];
+            lastSpawnX = 10;
+        }
+
+        // --- 3D 邏輯 ---
+
+        let scene, camera, renderer, controls, frameId;
+        const stickmen3D = [];
+
+        function init3D() {
+            const container = document.getElementById('canvas-3d');
+            container.innerHTML = '';
+
+            const floorColorHex = document.getElementById('color-floor').value;
+            const canvasColorHex = document.getElementById('color-canvas').value;
+            const borderColorHex = document.getElementById('color-border').value;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(canvasColorHex);
+
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 1000);
+            camera.position.set(20, 25, 30);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(w, h);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambient);
+            const sun = new THREE.DirectionalLight(0xffffff, 0.6);
+            sun.position.set(20, 30, 10);
+            sun.castShadow = true;
+            scene.add(sun);
+
+            const pgW = parseFloat(document.getElementById('pg-w').value);
+            const pgH = parseFloat(document.getElementById('pg-h').value);
+
+            // 地面
+            const floorGeo = new THREE.PlaneGeometry(pgW, pgH);
+            const floorMat = new THREE.MeshPhongMaterial({ color: floorColorHex });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // 3D 貼地邊界線 (取代浮空的牆壁/線條)
+            const borderPoints = [];
+            const hw = pgW / 2;
+            const hh = pgH / 2;
+            const bh = 0.005; // 極微小高度以避免與地面 Mesh 產生 Z-fighting (閃爍)
+            
+            borderPoints.push(new THREE.Vector3(-hw, bh, -hh), new THREE.Vector3(hw, bh, -hh));
+            borderPoints.push(new THREE.Vector3(hw, bh, -hh), new THREE.Vector3(hw, bh, hh));
+            borderPoints.push(new THREE.Vector3(hw, bh, hh), new THREE.Vector3(-hw, bh, hh));
+            borderPoints.push(new THREE.Vector3(-hw, bh, hh), new THREE.Vector3(-hw, bh, -hh));
+
+            const borderLineGeo = new THREE.BufferGeometry().setFromPoints(borderPoints);
+            const borderLineMat = new THREE.LineBasicMaterial({ color: borderColorHex });
+            const borderLines = new THREE.LineSegments(borderLineGeo, borderLineMat);
+            scene.add(borderLines);
+
+            stickmen3D.length = 0;
+            students.forEach(s => {
+                const group = new THREE.Group();
+                const posX = (parseFloat(s.el.style.left) + (s.size * SCALE / 2)) / SCALE - (pgW / 2);
+                const posZ = (parseFloat(s.el.style.top) + (s.size * SCALE / 2)) / SCALE - (pgH / 2);
+
+                let baseGeo = s.type === 'circle' ? new THREE.CylinderGeometry(s.size/2, s.size/2, 0.05, 32) : new THREE.BoxGeometry(s.size, 0.05, s.size);
+                const baseMat = new THREE.MeshPhongMaterial({ color: s.color, transparent: true, opacity: 0.4 });
+                const base = new THREE.Mesh(baseGeo, baseMat);
+                base.position.y = 0.025;
+                group.add(base);
+
+                const stickmanGroup = new THREE.Group();
+                const blackMat = new THREE.MeshPhongMaterial({ color: 0x333333 });
+                
+                const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.8), blackMat);
+                torso.position.y = 0.9;
+                stickmanGroup.add(torso);
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.15), blackMat);
+                head.position.y = 1.4;
+                stickmanGroup.add(head);
+                const arms = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.8), blackMat);
+                arms.rotation.z = Math.PI / 2;
+                arms.position.y = 1.2;
+                stickmanGroup.add(arms);
+                const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.6), blackMat);
+                legL.position.set(-0.1, 0.3, 0);
+                const legR = legL.clone();
+                legR.position.set(0.1, 0.3, 0);
+                stickmanGroup.add(legL, legR);
+
+                const ropeRadius = s.size / 2;
+                const ropeGeo = new THREE.TorusGeometry(ropeRadius, 0.03, 16, 100);
+                const ropeMat = new THREE.MeshBasicMaterial({ color: 0xffffcc }); 
+                const rope = new THREE.Mesh(ropeGeo, ropeMat);
+                rope.position.y = 0.8;
+                stickmanGroup.add(rope);
+
+                group.add(stickmanGroup);
+                group.position.set(posX, 0, posZ);
+                scene.add(group);
+                
+                stickmen3D.push({ 
+                    id: s.id,
+                    group: stickmanGroup, 
+                    rope: rope, 
+                    base: base,
+                    originalColor: new THREE.Color(s.color),
+                    size: s.size,
+                    posX: posX,
+                    posZ: posZ,
+                    offset: Math.random() * Math.PI * 2,
+                    speedMultiplier: 0.8 + Math.random() * 0.7 
+                });
+            });
+
+            animate();
+        }
+
+        function checkCollisions() {
+            const collisionEnabled = document.getElementById('collision-toggle').checked;
+            
+            stickmen3D.forEach(s => {
+                s.base.material.color.copy(s.originalColor);
+                s.base.material.opacity = 0.4;
+            });
+
+            if (!collisionEnabled) return;
+
+            for (let i = 0; i < stickmen3D.length; i++) {
+                for (let j = i + 1; j < stickmen3D.length; j++) {
+                    const a = stickmen3D[i];
+                    const b = stickmen3D[j];
+                    const dist = Math.sqrt(Math.pow(a.posX - b.posX, 2) + Math.pow(a.posZ - b.posZ, 2));
+                    const minDist = (a.size / 2) + (b.size / 2);
+                    if (dist < minDist) {
+                        const pulse = (Math.sin(Date.now() * 0.01) + 1) / 2;
+                        const alertColor = new THREE.Color(0xff0000);
+                        a.base.material.color.lerp(alertColor, pulse);
+                        b.base.material.color.lerp(alertColor, pulse);
+                        a.base.material.opacity = 0.7;
+                        b.base.material.opacity = 0.7;
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            frameId = requestAnimationFrame(animate);
+            const rawTime = Date.now() * 0.005; 
+            
+            stickmen3D.forEach(s => {
+                const individualTime = rawTime * s.speedMultiplier;
+                s.group.position.y = Math.abs(Math.sin(individualTime + s.offset)) * 0.4;
+                s.rope.rotation.x = individualTime * 2.0; 
+            });
+
+            checkCollisions();
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function toggleView() {
+            is3D = !is3D;
+            const v2d = document.getElementById('view-2d');
+            const v3d = document.getElementById('view-3d');
+            const btnText = document.getElementById('btn-text');
+            const btnIcon = document.getElementById('btn-icon');
+            const sidebar = document.getElementById('sidebar');
+
+            if (is3D) {
+                v2d.classList.add('hidden');
+                v3d.classList.remove('hidden');
+                sidebar.classList.add('opacity-50', 'pointer-events-none');
+                btnText.innerText = "回到 2D 設計";
+                btnIcon.innerText = "✏️";
+                init3D();
+            } else {
+                v2d.classList.remove('hidden');
+                v3d.classList.add('hidden');
+                sidebar.classList.remove('opacity-50', 'pointer-events-none');
+                btnText.innerText = "進入 3D 觀察";
+                btnIcon.innerText = "🚀";
+                cancelAnimationFrame(frameId);
+            }
+        }
+
+        window.onload = () => {
+            // 初始化時套用正確的預設顏色
+            resizePlayground();
+        };
+    </script>
+</body>
+</html>
