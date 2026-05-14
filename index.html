@@ -223,7 +223,7 @@
                     <div class="space-y-4">
                         <div class="p-3 bg-blue-50 rounded-xl">
                             <label class="block text-xs font-bold text-blue-600 mb-2">設定佔位大小 (米):</label>
-                            <input type="number" id="student-size" value="2" step="0.5" min="0.5" class="w-full p-2 rounded border-none shadow-inner mb-3">
+                            <input type="number" id="student-size" value="2" step="0.5" min="0.5" oninput="if(value<0.5 && value!=='') value=0.5" class="w-full p-2 rounded border-none shadow-inner mb-3">
                             <div class="grid grid-cols-2 gap-2">
                                 <button onclick="addStudent('square')" class="bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 font-bold">正方形</button>
                                 <button onclick="addStudent('circle')" class="bg-indigo-500 text-white py-2 rounded-lg hover:bg-indigo-600 font-bold">圓形</button>
@@ -457,8 +457,18 @@
         }
 
         function addStudent(type) {
-            const size = parseFloat(document.getElementById('student-size').value);
-            const studentColor = document.getElementById('color-student').value;
+            let sizeInput = document.getElementById('student-size');
+            let size = parseFloat(sizeInput.value);
+
+            // --- 新增檢查邏輯 ---
+            if (isNaN(size) || size < 0.5) {
+                showToast("請輸入 0.5 或以上的佔位大小！"); // 提示使用者
+                sizeInput.value = 0.5; // 強制修正輸入框數值
+                return; // 中斷執行，不增加學生
+            }
+    // ------------------
+
+    const studentColor = document.getElementById('color-student').value;
             const id = Date.now();
             const el = document.createElement('div');
             el.className = 'student-node';
@@ -879,6 +889,12 @@
 
         window.onload = () => {
             resizePlayground();
+            // 在 window.onload 內或 script 結尾加入
+            document.getElementById('student-size').addEventListener('blur', function() {
+            if (this.value < 0.5) {
+            this.value = 0.5;
+    }
+});
         };
     </script>
 </body>
