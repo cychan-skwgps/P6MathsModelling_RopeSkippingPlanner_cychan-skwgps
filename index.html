@@ -240,6 +240,14 @@
                                 <label class="text-xs font-bold text-gray-500">對角間隙 (px)</label>
                                 <input type="number" id="snap-gap" value="0" min="-50" max="100" class="w-16 p-1 text-center rounded border border-gray-200 text-xs shadow-inner outline-none focus:border-indigo-500">
                             </div>
+                            <div class="flex items-center justify-between pt-2 mt-2 border-t border-blue-50">
+    <label class="text-xs font-bold text-gray-500">磁吸角度</label>
+    <select id="snap-angle-step" class="w-20 p-1 text-center rounded border border-gray-200 text-xs shadow-inner outline-none">
+        <option value="2">90°</option>
+        <option value="4" selected>45°</option>
+        <option value="6">30°</option>
+    </select>
+</div>
                         </div>
                     </div>
                 </div>
@@ -620,7 +628,13 @@
                             const { type: targetType, cx2, cy2, dx, dy, W2 } = snapTarget;
                             
                             const angle = Math.atan2(dy, dx);
-                            const PI4 = Math.PI / 4;
+                            // 將原本這行：
+// const PI4 = Math.PI / 4;
+
+// 改為動取讀取界面數值：
+const angleDivisor = parseFloat(document.getElementById('snap-angle-step').value) || 4;
+const step = Math.PI / angleDivisor;
+const snappedAngle = Math.round(angle / step) * step;
                             const snappedAngle = Math.round(angle / PI4) * PI4;
 
                             const getRadiusAtAngle = (shapeType, width, a) => {
