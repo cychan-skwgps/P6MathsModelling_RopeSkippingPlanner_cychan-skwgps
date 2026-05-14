@@ -625,42 +625,43 @@
                         });
 
                         if (snapTarget) {
-                            const { type: targetType, cx2, cy2, dx, dy, W2 } = snapTarget;
+                                const { type: targetType, cx2, cy2, dx, dy, W2 } = snapTarget;
+                                
+                                const angle = Math.atan2(dy, dx);
+                                
+                                // 1. 動態讀取角度步進
+                                const angleDivisor = parseFloat(document.getElementById('snap-angle-step').value) || 4;
+                                const step = Math.PI / angleDivisor;
+                                const snappedAngle = Math.round(angle / step) * step;
                             
-                            const angle = Math.atan2(dy, dx);
-                            // 將原本這行：
-                            // const PI4 = Math.PI / 4;
+                                const getRadiusAtAngle = (shapeType, width, a) => {
+                                    if (shapeType === 'circle') return width / 2;
+                                    const absCos = Math.abs(Math.cos(a));
+                                    const absSin = Math.abs(Math.sin(a));
+                                    return (width / 2) / Math.max(absCos, absSin);
+                                };
                             
-                            // 改為動取讀取界面數值：
-                            const angleDivisor = parseFloat(document.getElementById('snap-angle-step').value) || 4;
-                            const step = Math.PI / angleDivisor;
-                            const snappedAngle = Math.round(angle / step) * step;                           
-
-                            const getRadiusAtAngle = (shapeType, width, a) => {
-                                if (shapeType === 'circle') return width / 2;
-                                const absCos = Math.abs(Math.cos(a));
-                                const absSin = Math.abs(Math.sin(a));
-                                return (width / 2) / Math.max(absCos, absSin);
-                            };
-
-                            const r2 = getRadiusAtAngle(targetType, W2, snappedAngle);
-                            const r1 = getRadiusAtAngle(type, W1, snappedAngle + Math.PI);
+                                const r2 = getRadiusAtAngle(targetType, W2, snappedAngle);
+                                const r1 = getRadiusAtAngle(type, W1, snappedAngle + Math.PI);
+                                
+                                // 2. 修正 PI4 報錯問題
+                                // 我們改用 90 度 (Math.PI / 2) 來判斷：
+                                // 如果角度不是 90 度的倍數，就視為「對角線」
+                                const isAxis = Math.abs(Math.cos(snappedAngle)) > 0.99 || Math.abs(Math.sin(snappedAngle)) > 0.99;
+                                const isDiagonal = !isAxis;
                             
-                            const angleIndex = Math.round(snappedAngle / PI4);
-                            const isDiagonal = Math.abs(angleIndex % 2) === 1;
-
-                            let gap = 0;
-                            if (isDiagonal) {
-                                gap = parseFloat(document.getElementById('snap-gap').value) || 0;
+                                let gap = 0;
+                                if (isDiagonal) {
+                                    gap = parseFloat(document.getElementById('snap-gap').value) || 0;
+                                }
+                                const idealDist = r1 + r2 + gap;
+                            
+                                cx1 = cx2 + idealDist * Math.cos(snappedAngle);
+                                cy1 = cy2 + idealDist * Math.sin(snappedAngle);
+                            
+                                x = Math.max(0, Math.min(cx1 - W1 / 2, maxX));
+                                y = Math.max(0, Math.min(cy1 - W1 / 2, maxY));
                             }
-                            const idealDist = r1 + r2 + gap;
-
-                            cx1 = cx2 + idealDist * Math.cos(snappedAngle);
-                            cy1 = cy2 + idealDist * Math.sin(snappedAngle);
-
-                            x = Math.max(0, Math.min(cx1 - W1 / 2, maxX));
-                            y = Math.max(0, Math.min(cy1 - W1 / 2, maxY));
-                        }
                     }
 
                     el.style.left = x + 'px';
