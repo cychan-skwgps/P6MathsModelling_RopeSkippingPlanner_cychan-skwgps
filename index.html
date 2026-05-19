@@ -883,7 +883,7 @@
             }
         }
 
-        // 監聽 iPad 螢幕旋轉或視窗調整大小，自動更新 3D 比例
+        // 自動監聽 iPad 旋轉或縮放，調整 3D 畫布比例
         window.addEventListener('resize', () => {
             if (is3D && renderer && camera) {
                 const container = document.getElementById('canvas-3d');
@@ -899,9 +899,32 @@
 
         window.onload = () => {
             resizePlayground();
+            
             document.getElementById('student-size').addEventListener('blur', function() {
                 if (this.value < 0.5) this.value = 0.5;
             });
+
+            // ==========================================
+            // 🚀 核心新增：全面攔截並禁止 iPad Safari 原生縮放手勢
+            // ==========================================
+            
+            // 1. 禁止整個網頁的「雙指捏合放大」功能
+            document.addEventListener('touchstart', function (event) {
+                if (event.touches.length > 1) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
+
+            // 2. 禁止整個網頁的「點兩下自動放大」功能（解決與刪除操作的衝突）
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    // 當快速連擊時，強制阻止瀏覽器核心的預設縮放行為
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, { passive: false });
         };
     </script>
 </body>
