@@ -11,7 +11,7 @@
         html, body { height: 100%; margin: 0; overflow: hidden; }
         body { background-color: #f8fafc; }
         
-        /* 側邊欄專用滾動條美化（避免撐開畫面） */
+        /* 側邊欄專用滾動條美化 */
         #sidebar::-webkit-scrollbar { width: 4px; }
         #sidebar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
 
@@ -137,7 +137,7 @@
             font-weight: bold;
             color: white;
             z-index: 10;
-            touch-action: none;
+            touch-action: none; /* 禁用 iPad 原生手勢 */
         }
         .student-node:active { z-index: 100; }
         
@@ -150,7 +150,6 @@
         
         .switch-green input:checked + .slider { background-color: #10b981; }
 
-        /* 防止 iPad 拖曳與縮放時整個網頁外殼捲動 */
         #view-2d { touch-action: none; }
     </style>
 </head>
@@ -559,10 +558,16 @@
                 e.stopPropagation();
 
                 const now = Date.now();
+                // 🕵️‍♂️ 偵測到雙擊刪除事件
                 if (now - lastTapTime < 300) {
                     students = students.filter(s => s.id !== id);
-                    el.remove();
-                    updateStudentCount();
+                    
+                    // 🚀 關鍵核心修復：延遲 50 毫秒再從 DOM 移除物件！
+                    // 讓 iPad Safari 完整跑完這次的點擊觸控生命週期，才不至於因為物件瞬間蒸發而誤判為「點擊背景放大」
+                    setTimeout(() => {
+                        el.remove();
+                        updateStudentCount();
+                    }, 50);
                     return;
                 }
                 lastTapTime = now;
@@ -884,7 +889,6 @@
             }
         }
 
-        // 當 iPad 轉向或視窗縮放時，自動重算 3D 解析度避免畫面拉伸
         window.addEventListener('resize', () => {
             if (is3D && renderer && camera) {
                 const container = document.getElementById('canvas-3d');
@@ -906,24 +910,23 @@
             });
 
             // ==========================================
-            // 🚀 核心優化：全面阻斷 iPad Safari 原生縮放手勢
+            // 🛡️ 終極防禦：禁止 iPad Safari 全網頁外殼放大
             // ==========================================
             
-            // 1. 禁止整個網頁的「雙指捏合」外殼放大（不影響內部 2D 畫布自訂的雙指縮放）
+            // 1. 禁止多指捏合放大網頁外殼（不影響 2D 畫布內建的捏合縮放）
             document.addEventListener('touchstart', function (event) {
                 if (event.touches.length > 1) {
                     event.preventDefault();
                 }
             }, { passive: false });
 
-            // 2. 禁止全域的「點兩下自動放大網頁」
-            // 為了不影響正常按鈕、輸入框的點擊，我們加入了過濾，完美釋放學生的「雙擊刪除」功能
+            // 2. 精準攔截空白處、非表單控制項的快速雙擊，防止 Safari 強制排版放大
             let lastTouchEnd = 0;
             document.addEventListener('touchend', function (event) {
                 const now = (new Date()).getTime();
                 if (now - lastTouchEnd <= 300) {
                     const target = event.target;
-                    // 當快速連擊非按鈕/輸入框區域時，強行沒收瀏覽器的放大預設行為
+                    // 當在非功能按鈕/輸入框的區域雙擊時，直接阻斷原生放大
                     if (!target.closest('button') && !target.closest('input') && !target.closest('select')) {
                         event.preventDefault();
                     }
