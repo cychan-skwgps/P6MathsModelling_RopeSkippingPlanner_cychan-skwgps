@@ -11,7 +11,7 @@
         html, body { height: 100%; margin: 0; overflow: hidden; }
         body { background-color: #f8fafc; }
         
-        /* 側邊欄滾動條美化 */
+        /* 側邊欄專用滾動條美化（避免撐開畫面） */
         #sidebar::-webkit-scrollbar { width: 4px; }
         #sidebar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
 
@@ -150,6 +150,7 @@
         
         .switch-green input:checked + .slider { background-color: #10b981; }
 
+        /* 防止 iPad 拖曳與縮放時整個網頁外殼捲動 */
         #view-2d { touch-action: none; }
     </style>
 </head>
@@ -276,7 +277,7 @@
                     </button>
                     
                     <div class="absolute bottom-4 right-4 p-2.5 bg-white/90 backdrop-blur rounded-xl shadow-md border border-gray-200 text-xs font-bold text-gray-700 z-20 flex items-center gap-1 pointer-events-none">
-                        👥 目前操場跳繩人數：<span class="text-emerald-600 text-base student-count-display">0</span>
+                        👥 目前人數：<span class="text-emerald-600 text-base student-count-display">0</span>
                     </div>
                 </div>
                 
@@ -291,7 +292,7 @@
                 <div id="view-3d" class="hidden relative flex-1 min-h-0 rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-100">
                     <div id="canvas-3d" class="w-full h-full cursor-move"></div>
                     <div class="absolute bottom-4 right-4 p-2.5 bg-white/90 backdrop-blur rounded-xl shadow-md border border-gray-200 text-xs font-bold text-gray-700 z-20 flex items-center gap-1 pointer-events-none">
-                        👥 目前操場跳繩人數：<span class="text-emerald-600 text-base student-count-display">0</span>
+                        👥 目前人數：<span class="text-emerald-600 text-base student-count-display">0</span>
                     </div>
                 </div>
 
@@ -883,7 +884,7 @@
             }
         }
 
-        // 自動監聽 iPad 旋轉或縮放，調整 3D 畫布比例
+        // 當 iPad 轉向或視窗縮放時，自動重算 3D 解析度避免畫面拉伸
         window.addEventListener('resize', () => {
             if (is3D && renderer && camera) {
                 const container = document.getElementById('canvas-3d');
@@ -905,23 +906,27 @@
             });
 
             // ==========================================
-            // 🚀 核心新增：全面攔截並禁止 iPad Safari 原生縮放手勢
+            // 🚀 核心優化：全面阻斷 iPad Safari 原生縮放手勢
             // ==========================================
             
-            // 1. 禁止整個網頁的「雙指捏合放大」功能
+            // 1. 禁止整個網頁的「雙指捏合」外殼放大（不影響內部 2D 畫布自訂的雙指縮放）
             document.addEventListener('touchstart', function (event) {
                 if (event.touches.length > 1) {
                     event.preventDefault();
                 }
             }, { passive: false });
 
-            // 2. 禁止整個網頁的「點兩下自動放大」功能（解決與刪除操作的衝突）
+            // 2. 禁止全域的「點兩下自動放大網頁」
+            // 為了不影響正常按鈕、輸入框的點擊，我們加入了過濾，完美釋放學生的「雙擊刪除」功能
             let lastTouchEnd = 0;
             document.addEventListener('touchend', function (event) {
                 const now = (new Date()).getTime();
                 if (now - lastTouchEnd <= 300) {
-                    // 當快速連擊時，強制阻止瀏覽器核心的預設縮放行為
-                    event.preventDefault();
+                    const target = event.target;
+                    // 當快速連擊非按鈕/輸入框區域時，強行沒收瀏覽器的放大預設行為
+                    if (!target.closest('button') && !target.closest('input') && !target.closest('select')) {
+                        event.preventDefault();
+                    }
                 }
                 lastTouchEnd = now;
             }, { passive: false });
