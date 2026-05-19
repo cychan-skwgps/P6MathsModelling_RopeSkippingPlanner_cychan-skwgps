@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" class="h-screen overflow-hidden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -8,8 +8,13 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #f8fafc; overflow-x: hidden; }
+        html, body { height: 100%; margin: 0; overflow: hidden; }
+        body { background-color: #f8fafc; }
         
+        /* 側邊欄滾動條美化 */
+        #sidebar::-webkit-scrollbar { width: 4px; }
+        #sidebar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+
         /* 繪圖容器 */
         .playground-outer-container {
             position: relative;
@@ -132,7 +137,6 @@
             font-weight: bold;
             color: white;
             z-index: 10;
-            /* 支援觸控拖曳關鍵 */
             touch-action: none;
         }
         .student-node:active { z-index: 100; }
@@ -144,72 +148,68 @@
         input:checked + .slider { background-color: #ef4444; }
         input:checked + .slider:before { transform: translateX(22px); }
         
-        /* 綠色版本 Switch */
         .switch-green input:checked + .slider { background-color: #10b981; }
 
-        /* 防止 iPad 拖曳時畫面捲動 */
-        #view-2d {
-            touch-action: none;
-        }
+        #view-2d { touch-action: none; }
     </style>
 </head>
-<body class="p-4 md:p-6">
+<body class="p-4 md:p-5 flex flex-col h-screen overflow-hidden">
 
     <div id="toast-message" class="fixed top-10 left-1/2 transform -translate-x-1/2 bg-red-500 text-white font-bold px-8 py-3 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-[100] translate-y-[-20px]">
         操場無位！
     </div>
 
-    <div class="max-w-7xl mx-auto">
-        <header class="mb-6 flex justify-between items-center flex-wrap gap-4">
+    <div class="max-w-7xl mx-auto w-full h-full flex flex-col min-h-0">
+        <header class="mb-4 flex justify-between items-center flex-wrap gap-4 flex-shrink-0">
             <div>
-                <h1 class="text-3xl font-extrabold text-emerald-700">🏃‍♂️ 跳繩空間模擬器</h1>
-                <p class="text-gray-500">規劃你的跳繩隊伍，觀察 3D 跳躍效果 - 筲箕灣官立小學 陳俊諺老師</p>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-emerald-700">🏃‍♂️ 跳繩空間模擬器</h1>
+                <p class="text-sm text-gray-500">規劃你的跳繩隊伍，觀察 3D 跳躍效果 - 筲箕灣官立小學 陳俊諺老師</p>
             </div>
             <div class="flex gap-2">
-                <button id="view-mode-btn" onclick="toggleView()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-full font-bold shadow-lg transition-all flex items-center gap-2">
+                <button id="view-mode-btn" onclick="toggleView()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-full font-bold shadow-lg transition-all flex items-center gap-2 text-sm md:text-base">
                     <span id="btn-icon">🚀</span> <span id="btn-text">進入 3D 觀察</span>
                 </button>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div id="sidebar" class="lg:col-span-1 space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1 min-h-0">
+            <div id="sidebar" class="lg:col-span-1 space-y-4 overflow-y-auto h-full pr-1 flex-shrink-0">
                 
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-emerald-100">
-                    <h3 class="font-bold text-emerald-800 mb-3 flex items-center gap-2">📏 操場大小 (米)</h3>
-                    <div class="grid grid-cols-2 gap-3 mb-3">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-emerald-100">
+                    <h3 class="font-bold text-sm text-emerald-800 mb-2 flex items-center gap-2">📏 操場大小 (米)</h3>
+                    <div class="grid grid-cols-2 gap-3 mb-2">
                         <div>
                             <label class="text-xs text-gray-400">長度</label>
-                            <input type="number" id="pg-w" value="14" min="5" max="60" oninput="resizePlayground()" class="w-full border-b-2 border-gray-100 p-2 focus:border-emerald-500 outline-none">
+                            <input type="number" id="pg-w" value="14" min="5" max="60" oninput="resizePlayground()" class="w-full border-b-2 border-gray-100 p-1 focus:border-emerald-500 outline-none text-sm">
                         </div>
                         <div>
                             <label class="text-xs text-gray-400">闊度</label>
-                            <input type="number" id="pg-h" value="15" min="5" max="40" oninput="resizePlayground()" class="w-full border-b-2 border-gray-100 p-2 focus:border-emerald-500 outline-none">
+                            <input type="number" id="pg-h" value="15" min="5" max="40" oninput="resizePlayground()" class="w-full border-b-2 border-gray-100 p-1 focus:border-emerald-500 outline-none text-sm">
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div class="grid grid-cols-2 gap-2 mb-1">
                         <button onclick="setQuickSize(28, 15)" class="text-[10px] bg-emerald-50 text-emerald-600 py-1 rounded hover:bg-emerald-100 transition font-bold border border-emerald-200">全個籃球場</button>
                         <button onclick="setQuickSize(14, 15)" class="text-[10px] bg-emerald-50 text-emerald-600 py-1 rounded hover:bg-emerald-100 transition font-bold border border-emerald-200">半個籃球場</button>
                     </div>
                 </div>
 
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2">🎨 顏色設定</h3>
-                    <div class="space-y-3">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-sm text-gray-700 mb-2 flex items-center gap-2">🎨 顏色設定</h3>
+                    <div class="space-y-2 text-sm">
                         <div class="flex items-center justify-between">
-                            <label class="text-sm">畫布顏色</label>
-                            <input type="color" id="color-canvas" value="#e0f2fe" onchange="updateColors()" class="cursor-pointer">
+                            <label>畫布顏色</label>
+                            <input type="color" id="color-canvas" value="#e0f2fe" onchange="updateColors()" class="cursor-pointer h-7 w-7 rounded">
                         </div>
                         <div class="flex items-center justify-between">
-                            <label class="text-sm font-medium">地面顏色</label>
-                            <input type="color" id="color-floor" value="#8B6057" onchange="updateColors()" class="cursor-pointer">
+                            <label class="font-medium">地面顏色</label>
+                            <input type="color" id="color-floor" value="#8B6057" onchange="updateColors()" class="cursor-pointer h-7 w-7 rounded">
                         </div>
                         <div class="flex items-center justify-between">
-                            <label class="text-sm">學生顏色</label>
-                            <input type="color" id="color-student" value="#f97316" class="cursor-pointer">
+                            <label>學生顏色</label>
+                            <input type="color" id="color-student" value="#f97316" class="cursor-pointer h-7 w-7 rounded">
                         </div>
                         <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                            <label class="text-sm font-bold text-red-600">碰撞警示</label>
+                            <label class="font-bold text-red-600">碰撞警示</label>
                             <label class="switch">
                                 <input type="checkbox" id="collision-toggle" checked>
                                 <span class="slider"></span>
@@ -218,46 +218,46 @@
                     </div>
                 </div>
 
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-blue-100">
-                    <h3 class="font-bold text-blue-800 mb-3">🧍 增加跳繩學生</h3>
-                    <div class="space-y-4">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-blue-100">
+                    <h3 class="font-bold text-sm text-blue-800 mb-2">🧍 增加跳繩學生</h3>
+                    <div class="space-y-3">
                         <div class="p-3 bg-blue-50 rounded-xl">
-                            <label class="block text-xs font-bold text-blue-600 mb-2">設定佔位大小 (米):</label>
-                            <input type="number" id="student-size" value="2" step="0.5" min="0.5" oninput="if(value<0.5 && value!=='') value=0.5" class="w-full p-2 rounded border-none shadow-inner mb-3">
+                            <label class="block text-xs font-bold text-blue-600 mb-1">設定佔位大小 (米):</label>
+                            <input type="number" id="student-size" value="2" step="0.5" min="0.5" oninput="if(value<0.5 && value!=='') value=0.5" class="w-full p-1.5 rounded border-none shadow-inner mb-2 text-sm">
                             <div class="grid grid-cols-2 gap-2">
-                                <button onclick="addStudent('square')" class="bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 font-bold">正方形</button>
-                                <button onclick="addStudent('circle')" class="bg-indigo-500 text-white py-2 rounded-lg hover:bg-indigo-600 font-bold">圓形</button>
+                                <button onclick="addStudent('square')" class="bg-blue-500 text-white py-1.5 rounded-lg hover:bg-blue-600 font-bold text-sm">正方形</button>
+                                <button onclick="addStudent('circle')" class="bg-indigo-500 text-white py-1.5 rounded-lg hover:bg-indigo-600 font-bold text-sm">圓形</button>
                             </div>
                             
-                            <div class="flex items-center justify-between pt-4 mt-3 border-t border-blue-100">
+                            <div class="flex items-center justify-between pt-3 mt-2 border-t border-blue-100">
                                 <label class="text-xs font-bold text-indigo-700">🧲 磁吸對齊</label>
-                                <label class="switch switch-green" style="transform: scale(0.85); transform-origin: right center;">
+                                <label class="switch switch-green" style="transform: scale(0.8); transform-origin: right center;">
                                     <input type="checkbox" id="snap-toggle">
                                     <span class="slider"></span>
                                 </label>
                             </div>
-                            <div class="flex items-center justify-between pt-2 mt-2 border-t border-blue-50">
+                            <div class="flex items-center justify-between pt-2 mt-1 border-t border-blue-50">
                                 <label class="text-xs font-bold text-gray-500">對角間隙 (px)</label>
-                                <input type="number" id="snap-gap" value="0" min="-50" max="100" class="w-16 p-1 text-center rounded border border-gray-200 text-xs shadow-inner outline-none focus:border-indigo-500">
+                                <input type="number" id="snap-gap" value="0" min="-50" max="100" class="w-14 p-0.5 text-center rounded border border-gray-200 text-xs shadow-inner outline-none focus:border-indigo-500">
                             </div>
-                            <div class="flex items-center justify-between pt-2 mt-2 border-t border-blue-50">
+                            <div class="flex items-center justify-between pt-2 mt-1 border-t border-blue-50">
                                 <label class="text-xs font-bold text-gray-500">磁吸角度</label>
-                                <select id="snap-angle-step" class="w-20 p-1 text-center rounded border border-gray-200 text-xs shadow-inner outline-none">
-                                <option value="2">90°</option>
-                                <option value="4" selected>45°</option>
-                                <option value="6">30°</option>
+                                <select id="snap-angle-step" class="w-16 p-0.5 text-center rounded border border-gray-200 text-xs shadow-inner outline-none">
+                                    <option value="2">90°</option>
+                                    <option value="4" selected>45°</option>
+                                    <option value="6">30°</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <button onclick="clearCanvas()" class="w-full py-2 text-red-400 hover:text-red-600 text-sm font-medium">清空所有學生</button>
+                <button onclick="clearCanvas()" class="w-full py-1 text-red-400 hover:text-red-600 text-xs font-medium">清空所有學生</button>
             </div>
 
-            <div class="lg:col-span-3 flex flex-col gap-4">
+            <div class="lg:col-span-3 flex flex-col gap-3 h-full min-h-0">
                 
-                <div id="view-2d" class="rounded-3xl min-h-[600px] flex items-center justify-center overflow-hidden relative transition-colors duration-300 select-none border border-gray-100 bg-white">
+                <div id="view-2d" class="rounded-3xl flex-1 min-h-0 flex items-center justify-center overflow-hidden relative transition-colors duration-300 select-none border border-gray-100 bg-white">
                     <div id="playground-outer-container" class="playground-outer-container">
                         <div id="playground-2d" class="playground-2d">
                             <div class="dim-line dim-horizontal">
@@ -275,32 +275,32 @@
                         🎯
                     </button>
                     
-                    <div class="absolute bottom-4 right-4 p-3 bg-white/90 backdrop-blur rounded-xl shadow-md border border-gray-200 text-sm font-bold text-gray-700 z-20 flex items-center gap-2 pointer-events-none">
-                        👥 目前操場跳繩人數：<span class="text-emerald-600 text-lg student-count-display">0</span>
+                    <div class="absolute bottom-4 right-4 p-2.5 bg-white/90 backdrop-blur rounded-xl shadow-md border border-gray-200 text-xs font-bold text-gray-700 z-20 flex items-center gap-1 pointer-events-none">
+                        👥 目前人數：<span class="text-emerald-600 text-base student-count-display">0</span>
                     </div>
                 </div>
                 
-                <div id="view-2d-instructions" class="p-4 bg-white rounded-xl shadow-sm border border-blue-100 flex flex-wrap items-center gap-4 text-sm font-bold text-gray-600">
-                    <span class="text-blue-600 border-b-2 border-blue-200 pb-1">2D 操作</span>
+                <div id="view-2d-instructions" class="p-3 bg-white rounded-xl shadow-sm border border-blue-100 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-bold text-gray-600 flex-shrink-0">
+                    <span class="text-blue-600 border-b-2 border-blue-200 pb-0.5">2D 操作</span>
                     <span class="flex items-center gap-1">🔍 縮放: 滾輪 / 雙指捏合</span>
                     <span class="flex items-center gap-1">🖐️ 移動: 右鍵 / 單指拖曳空地</span>
                     <span class="flex items-center gap-1 text-indigo-500">✨ 拖曳學生: 點按拖曳</span>
-                    <span class="flex items-center gap-1 text-red-500">❌ 刪除：雙擊 / 點兩下</span>
+                    <span class="flex items-center gap-1 text-red-500">❌ 刪除：點兩下</span>
                 </div>
 
-                <div id="view-3d" class="hidden relative h-[600px] rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-100">
+                <div id="view-3d" class="hidden relative flex-1 min-h-0 rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-100">
                     <div id="canvas-3d" class="w-full h-full cursor-move"></div>
-                    <div class="absolute bottom-4 right-4 p-3 bg-white/90 backdrop-blur rounded-xl shadow-md border border-gray-200 text-sm font-bold text-gray-700 z-20 flex items-center gap-2 pointer-events-none">
-                        👥 目前操場跳繩人數：<span class="text-emerald-600 text-lg student-count-display">0</span>
+                    <div class="absolute bottom-4 right-4 p-2.5 bg-white/90 backdrop-blur rounded-xl shadow-md border border-gray-200 text-xs font-bold text-gray-700 z-20 flex items-center gap-1 pointer-events-none">
+                        👥 目前人數：<span class="text-emerald-600 text-base student-count-display">0</span>
                     </div>
                 </div>
 
-                <div id="view-3d-instructions" class="hidden p-4 bg-white rounded-xl shadow-sm border border-emerald-100 flex flex-wrap items-center gap-6 text-sm font-bold text-gray-600">
-                    <span class="text-emerald-600 border-b-2 border-emerald-200 pb-1">3D 觀察操作</span>
-                    <span class="flex items-center gap-2">🖱️ 旋轉: 單指 / 左鍵拖曳</span>
-                    <span class="flex items-center gap-2">🔍 縮放: 雙指 / 滾輪</span>
-                    <span class="flex items-center gap-2">🖐️ 移動: 雙指 / 右鍵拖曳</span>
-                    <span class="flex items-center gap-2 text-red-500">⚠️ 紅色提示: 空間碰撞</span>
+                <div id="view-3d-instructions" class="hidden p-3 bg-white rounded-xl shadow-sm border border-emerald-100 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs font-bold text-gray-600 flex-shrink-0">
+                    <span class="text-emerald-600 border-b-2 border-emerald-200 pb-0.5">3D 觀察操作</span>
+                    <span class="flex items-center gap-1">️🖱️ 旋轉: 單指 / 左鍵拖曳</span>
+                    <span class="flex items-center gap-1">🔍 縮放: 雙指 / 滾輪</span>
+                    <span class="flex items-center gap-1">🖐️ 移動: 雙指 / 右鍵拖曳</span>
+                    <span class="flex items-center gap-1 text-red-500">⚠️ 紅色提示: 空間碰撞</span>
                 </div>
             </div>
         </div>
@@ -330,7 +330,7 @@
             }, 2000); 
         }
 
-        // --- 2D 畫布觸控與滑鼠控制 (平移、縮放) ---
+        // --- 2D 畫布觸控與滑鼠控制 ---
         let transform2D = { x: 0, y: 0, scale: 1 };
         let isPanning2D = false;
         let lastMouseX, lastMouseY;
@@ -350,15 +350,13 @@
 
         view2dContainer.addEventListener('contextmenu', e => e.preventDefault());
 
-        // 監聽 Pointer 事件 (相容滑鼠與觸控)
         view2dContainer.addEventListener('pointerdown', e => {
             if (is3D) return;
-            if (e.target.closest('.student-node')) return; // 若點到學生，交給學生自己的邏輯處理
+            if (e.target.closest('.student-node')) return;
 
             activePointers.push({ id: e.pointerId, x: e.clientX, y: e.clientY });
 
             if (activePointers.length === 1) {
-                // 滑鼠右鍵，或平板單指觸控 -> 畫布平移
                 if (e.pointerType === 'touch' || e.button === 2) {
                     isPanning2D = true;
                     lastMouseX = e.clientX;
@@ -366,7 +364,6 @@
                     view2dContainer.setPointerCapture(e.pointerId);
                 }
             } else if (activePointers.length === 2) {
-                // 平板雙指捏合 -> 畫布縮放準備
                 isPanning2D = false; 
                 const dist = Math.hypot(
                     activePointers[0].x - activePointers[1].x,
@@ -386,7 +383,6 @@
                 activePointers[index].y = e.clientY;
             }
 
-            // 處理平移
             if (activePointers.length === 1 && isPanning2D) {
                 transform2D.x += (e.clientX - lastMouseX);
                 transform2D.y += (e.clientY - lastMouseY);
@@ -394,7 +390,6 @@
                 lastMouseY = e.clientY;
                 updateTransform2D();
             } 
-            // 處理雙指縮放
             else if (activePointers.length === 2) {
                 const dist = Math.hypot(
                     activePointers[0].x - activePointers[1].x,
@@ -413,7 +408,6 @@
             if (activePointers.length === 0) {
                 isPanning2D = false;
             } else if (activePointers.length === 1) {
-                // 雙指放開一指，停止動作以防畫面跳躍
                 isPanning2D = false;
             }
         };
@@ -422,7 +416,6 @@
         view2dContainer.addEventListener('pointercancel', handlePointerEnd);
         view2dContainer.addEventListener('pointerleave', handlePointerEnd);
 
-        // 電腦滑鼠滾輪縮放保持不變
         view2dContainer.addEventListener('wheel', e => {
             if (is3D) return;
             e.preventDefault();
@@ -431,7 +424,6 @@
             transform2D.scale = Math.max(0.2, Math.min(transform2D.scale, 5)); 
             updateTransform2D();
         }, { passive: false });
-        // ------------------------------------
 
         function setQuickSize(w, h) {
             document.getElementById('pg-w').value = w;
@@ -468,15 +460,13 @@
             let sizeInput = document.getElementById('student-size');
             let size = parseFloat(sizeInput.value);
 
-            // --- 新增檢查邏輯 ---
             if (isNaN(size) || size < 0.5) {
-                showToast("請輸入 0.5 或以上的佔位大小！"); // 提示使用者
-                sizeInput.value = 0.5; // 強制修正輸入框數值
-                return; // 中斷執行，不增加學生
+                showToast("請輸入 0.5 或以上的佔位大小！");
+                sizeInput.value = 0.5;
+                return;
             }
-    // ------------------
 
-    const studentColor = document.getElementById('color-student').value;
+            const studentColor = document.getElementById('color-student').value;
             const id = Date.now();
             const el = document.createElement('div');
             el.className = 'student-node';
@@ -559,7 +549,6 @@
             el.style.borderRadius = type === 'circle' ? '50%' : '0';
             el.innerHTML = `<span>${size}m</span>`;
 
-            // --- 修改為支援觸控與滑鼠的拖曳和刪除邏輯 ---
             let lastTapTime = 0;
 
             el.onpointerdown = (e) => {
@@ -568,7 +557,6 @@
                 e.preventDefault();
                 e.stopPropagation();
 
-                // 處理雙擊刪除 (相容平板與電腦)
                 const now = Date.now();
                 if (now - lastTapTime < 300) {
                     students = students.filter(s => s.id !== id);
@@ -625,43 +613,38 @@
                         });
 
                         if (snapTarget) {
-                                const { type: targetType, cx2, cy2, dx, dy, W2 } = snapTarget;
-                                
-                                const angle = Math.atan2(dy, dx);
-                                
-                                // 1. 動態讀取角度步進
-                                const angleDivisor = parseFloat(document.getElementById('snap-angle-step').value) || 4;
-                                const step = Math.PI / angleDivisor;
-                                const snappedAngle = Math.round(angle / step) * step;
+                            const { type: targetType, cx2, cy2, dx, dy, W2 } = snapTarget;
+                            const angle = Math.atan2(dy, dx);
                             
-                                const getRadiusAtAngle = (shapeType, width, a) => {
-                                    if (shapeType === 'circle') return width / 2;
-                                    const absCos = Math.abs(Math.cos(a));
-                                    const absSin = Math.abs(Math.sin(a));
-                                    return (width / 2) / Math.max(absCos, absSin);
-                                };
+                            const angleDivisor = parseFloat(document.getElementById('snap-angle-step').value) || 4;
+                            const step = Math.PI / angleDivisor;
+                            const snappedAngle = Math.round(angle / step) * step;
+                        
+                            const getRadiusAtAngle = (shapeType, width, a) => {
+                                if (shapeType === 'circle') return width / 2;
+                                const absCos = Math.abs(Math.cos(a));
+                                const absSin = Math.abs(Math.sin(a));
+                                return (width / 2) / Math.max(absCos, absSin);
+                            };
+                        
+                            const r2 = getRadiusAtAngle(targetType, W2, snappedAngle);
+                            const r1 = getRadiusAtAngle(type, W1, snappedAngle + Math.PI);
                             
-                                const r2 = getRadiusAtAngle(targetType, W2, snappedAngle);
-                                const r1 = getRadiusAtAngle(type, W1, snappedAngle + Math.PI);
-                                
-                                // 2. 修正 PI4 報錯問題
-                                // 我們改用 90 度 (Math.PI / 2) 來判斷：
-                                // 如果角度不是 90 度的倍數，就視為「對角線」
-                                const isAxis = Math.abs(Math.cos(snappedAngle)) > 0.99 || Math.abs(Math.sin(snappedAngle)) > 0.99;
-                                const isDiagonal = !isAxis;
-                            
-                                let gap = 0;
-                                if (isDiagonal) {
-                                    gap = parseFloat(document.getElementById('snap-gap').value) || 0;
-                                }
-                                const idealDist = r1 + r2 + gap;
-                            
-                                cx1 = cx2 + idealDist * Math.cos(snappedAngle);
-                                cy1 = cy2 + idealDist * Math.sin(snappedAngle);
-                            
-                                x = Math.max(0, Math.min(cx1 - W1 / 2, maxX));
-                                y = Math.max(0, Math.min(cy1 - W1 / 2, maxY));
+                            const isAxis = Math.abs(Math.cos(snappedAngle)) > 0.99 || Math.abs(Math.sin(snappedAngle)) > 0.99;
+                            const isDiagonal = !isAxis;
+                        
+                            let gap = 0;
+                            if (isDiagonal) {
+                                gap = parseFloat(document.getElementById('snap-gap').value) || 0;
                             }
+                            const idealDist = r1 + r2 + gap;
+                        
+                            cx1 = cx2 + idealDist * Math.cos(snappedAngle);
+                            cy1 = cy2 + idealDist * Math.sin(snappedAngle);
+                        
+                            x = Math.max(0, Math.min(cx1 - W1 / 2, maxX));
+                            y = Math.max(0, Math.min(cy1 - W1 / 2, maxY));
+                        }
                     }
 
                     el.style.left = x + 'px';
@@ -698,8 +681,7 @@
             });
         }
 
-        // --- 3D 邏輯保持不變 (OrbitControls 內建完美的觸控支援) ---
-
+        // --- 3D 邏輯 ---
         let scene, camera, renderer, controls, frameId;
         const stickmen3D = [];
 
@@ -901,14 +883,25 @@
             }
         }
 
+        // 監聽 iPad 螢幕旋轉或視窗調整大小，自動更新 3D 比例
+        window.addEventListener('resize', () => {
+            if (is3D && renderer && camera) {
+                const container = document.getElementById('canvas-3d');
+                if (container) {
+                    const w = container.clientWidth;
+                    const h = container.clientHeight;
+                    camera.aspect = w / h;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(w, h);
+                }
+            }
+        });
+
         window.onload = () => {
             resizePlayground();
-            // 在 window.onload 內或 script 結尾加入
             document.getElementById('student-size').addEventListener('blur', function() {
-            if (this.value < 0.5) {
-            this.value = 0.5;
-    }
-});
+                if (this.value < 0.5) this.value = 0.5;
+            });
         };
     </script>
 </body>
