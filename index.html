@@ -285,7 +285,7 @@
                     <span class="flex items-center gap-1">🔍 縮放: 滾輪 / 雙指捏合</span>
                     <span class="flex items-center gap-1">🖐️ 移動: 右鍵 / 單指拖曳空地</span>
                     <span class="flex items-center gap-1 text-indigo-500">✨ 拖曳學生: 點按拖曳</span>
-                    <span class="flex items-center gap-1 text-red-500">❌ 刪除：點兩下</span>
+                    <span class="flex items-center gap-1 text-red-500">❌ 刪除：長按</span>
                 </div>
 
                 <div id="view-3d" class="hidden relative flex-1 min-h-0 rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-100">
@@ -551,26 +551,35 @@
 
             let lastTapTime = 0;
 
+           // --- 改為長按刪除邏輯 ---
+            let pressTimer = null;
+            let isLongPress = false;
+
             el.onpointerdown = (e) => {
                 if (is3D) return;
                 if (e.pointerType === 'mouse' && e.button !== 0) return; 
                 e.preventDefault();
                 e.stopPropagation();
 
-                const now = Date.now();
-                // 🕵️‍♂️ 偵測到雙擊刪除事件
-                if (now - lastTapTime < 300) {
+                isLongPress = false;
+                
+                // 設定長按計時器（例如 800 毫秒判定為長按）
+                pressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    
+                    // 觸發視覺提示（例如縮小並變透明，讓使用者知道即將刪除）
+                    el.style.transform = 'scale(0.5)';
+                    el.style.opacity = '0';
+                    
+                    // 從資料庫移除
                     students = students.filter(s => s.id !== id);
                     
-                    // 🚀 關鍵核心修復：延遲 50 毫秒再從 DOM 移除物件！
-                    // 讓 iPad Safari 完整跑完這次的點擊觸控生命週期，才不至於因為物件瞬間蒸發而誤判為「點擊背景放大」
+                    // 延遲 100 毫秒等縮放動畫完成後從 DOM 移除
                     setTimeout(() => {
                         el.remove();
                         updateStudentCount();
-                    }, 50);
-                    return;
-                }
-                lastTapTime = now;
+                    }, 100);
+                }, 800); 
 
                 const rect = el.getBoundingClientRect();
                 const offsetX = e.clientX - rect.left;
@@ -579,6 +588,17 @@
                 el.setPointerCapture(e.pointerId);
 
                 const onPointerMove = (moveEvent) => {
+                    // 如果使用者開始移動，且移動距離超過一定範圍，就取消長按刪除
+                    const currentRect = el.getBoundingClientRect();
+                    let dx = moveEvent.clientX - e.clientX;
+                    let dy = moveEvent.clientY - e.clientY;
+                    if (Math.hypot(dx, dy) > 5) {
+                        clearTimeout(pressTimer);
+                    }
+
+                    // 如果已經觸發長按刪除，就不執行後續的拖曳邏輯
+                    if (isLongPress) return;
+
                     const pgRect = pg2d.getBoundingClientRect();
 
                     let x = (moveEvent.clientX - pgRect.left - offsetX) / transform2D.scale;
@@ -658,6 +678,9 @@
                 };
 
                 const onPointerUp = (upEvent) => {
+                    // 放開手指時，如果還沒到長按時間，就清除計時器（正常移動或短點擊）
+                    clearTimeout(pressTimer);
+                    
                     el.releasePointerCapture(upEvent.pointerId);
                     el.removeEventListener('pointermove', onPointerMove);
                     el.removeEventListener('pointerup', onPointerUp);
