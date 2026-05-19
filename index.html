@@ -903,34 +903,37 @@
         });
 
         window.onload = () => {
-    resizePlayground();
-    
-    document.getElementById('student-size').addEventListener('blur', function() {
-        if (this.value < 0.5) this.value = 0.5;
-    });
+            resizePlayground();
+            
+            document.getElementById('student-size').addEventListener('blur', function() {
+                if (this.value < 0.5) this.value = 0.5;
+            });
 
-    // 🛡️ 終極防禦：禁止 iPad Safari 全網頁外殼強制放大
-    // 1. 阻止雙指捏合網頁外殼（不影響你內部 2D 畫布的縮放功能）
-    document.addEventListener('touchstart', function (event) {
-        if (event.touches.length > 1) {
-            event.preventDefault();
-        }
-    }, { passive: false });
+            // ==========================================
+            // 🛡️ 終極防禦：禁止 iPad Safari 全網頁外殼放大
+            // ==========================================
+            
+            // 1. 禁止多指捏合放大網頁外殼（不影響 2D 畫布內建的捏合縮放）
+            document.addEventListener('touchstart', function (event) {
+                if (event.touches.length > 1) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
 
-    // 2. 阻斷快速雙擊非輸入框區域引起的 Safari 強制放大
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', function (event) {
-        const now = (new Date()).getTime();
-        if (now - lastTouchEnd <= 300) {
-            const target = event.target;
-            // 如果點擊的不是輸入框、下拉選單或功能按鈕，就徹底攔截雙擊放大
-            if (!target.closest('input') && !target.closest('button') && !target.closest('select')) {
-                event.preventDefault();
-            }
-        }
-        lastTouchEnd = now;
-    }, { passive: false });
-};
+            // 2. 精準攔截空白處、非表單控制項的快速雙擊，防止 Safari 強制排版放大
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    const target = event.target;
+                    // 當在非功能按鈕/輸入框的區域雙擊時，直接阻斷原生放大
+                    if (!target.closest('button') && !target.closest('input') && !target.closest('select')) {
+                        event.preventDefault();
+                    }
+                }
+                lastTouchEnd = now;
+            }, { passive: false });
+        };
     </script>
 </body>
 </html>
