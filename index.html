@@ -364,7 +364,7 @@
         
         let activePointers = [];
         let initialPinchDist = 0;
-        let initialPinchScale = 1;
+        let initialPinchScale = 0.8;
 
         function updateTransform2D() {
             outerContainer.style.transform = `translate(${transform2D.x}px, ${transform2D.y}px) scale(${transform2D.scale})`;
