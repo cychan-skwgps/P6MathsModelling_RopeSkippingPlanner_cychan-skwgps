@@ -362,13 +362,13 @@
         }
 
         // --- 智能重設視角功能（2D/3D 通用） ---
-        let transform2D = { x: 0, y: 0, scale: 0.8 };
+        let transform2D = { x: 0, y: 0, scale: 1 };
         let isPanning2D = false;
         let lastMouseX, lastMouseY;
         
         let activePointers = [];
         let initialPinchDist = 0;
-        let initialPinchScale = 0.8;
+        let initialPinchScale = 1;
 
         function updateTransform2D() {
             outerContainer.style.transform = `translate(${transform2D.x}px, ${transform2D.y}px) scale(${transform2D.scale})`;
@@ -385,7 +385,7 @@
                 }
             } else {
                 // 如果在 2D 模式，重設 2D 畫布
-                transform2D = { x: 0, y: 0, scale: 0.8 };
+                transform2D = { x: 0, y: 0, scale: 1 };
                 updateTransform2D();
             }
         }
