@@ -166,6 +166,9 @@
                 <p class="text-sm text-gray-500">規劃你的跳繩隊伍，觀察 3D 跳躍效果 - 筲箕灣官立小學 陳俊諺老師</p>
             </div>
             <div class="flex gap-2">
+                <button id="reset-view-btn" onclick="reset2DView()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full font-bold shadow-lg transition-all flex items-center gap-2 text-sm md:text-base">
+                    <span>🎯</span> <span>重設畫布視角</span>
+                </button>
                 <button id="view-mode-btn" onclick="toggleView()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-full font-bold shadow-lg transition-all flex items-center gap-2 text-sm md:text-base">
                     <span id="btn-icon">🚀</span> <span id="btn-text">進入 3D 觀察</span>
                 </button>
@@ -180,11 +183,11 @@
                     <div class="grid grid-cols-2 gap-3 mb-2">
                         <div>
                             <label class="text-xs text-gray-400">長度</label>
-                            <input type="number" id="pg-w" value="14" min="5" max="60" oninput="currentBgImage=''; resizePlayground()" class="w-full border-b-2 border-gray-100 p-1 focus:border-emerald-500 outline-none text-sm">
+                            <input type="number" id="pg-w" value="15" min="5" max="60" oninput="currentBgImage=''; resizePlayground()" class="w-full border-b-2 border-gray-100 p-1 focus:border-emerald-500 outline-none text-sm">
                         </div>
                         <div>
                             <label class="text-xs text-gray-400">闊度</label>
-                            <input type="number" id="pg-h" value="15" min="5" max="40" oninput="currentBgImage=''; resizePlayground()" class="w-full border-b-2 border-gray-100 p-1 focus:border-emerald-500 outline-none text-sm">
+                            <input type="number" id="pg-h" value="14" min="5" max="40" oninput="currentBgImage=''; resizePlayground()" class="w-full border-b-2 border-gray-100 p-1 focus:border-emerald-500 outline-none text-sm">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2 mb-1">
@@ -275,19 +278,15 @@
                     <div id="playground-outer-container" class="playground-outer-container">
                         <div id="playground-2d" class="playground-2d">
                             <div class="dim-line dim-horizontal">
-                                <span class="dim-text" id="label-w">14m</span>
+                                <span class="dim-text" id="label-w">15m</span>
                                 <span class="arrow-right"></span>
                             </div>
                             <div class="dim-line dim-vertical">
-                                <span class="dim-text" id="label-h" style="transform: rotate(90deg);">15m</span>
+                                <span class="dim-text" id="label-h" style="transform: rotate(90deg);">14m</span>
                                 <span class="arrow-bottom"></span>
                             </div>
                         </div>
                     </div>
-
-                    <button onclick="reset2DView()" class="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur rounded-full shadow border border-gray-200 hover:bg-gray-100 transition flex items-center justify-center text-lg z-20" title="重設畫布視角">
-                        🎯
-                    </button>
                     
                     <div class="absolute bottom-4 right-4 p-2.5 bg-white/90 backdrop-blur rounded-xl shadow-md border border-gray-200 text-xs font-bold text-gray-700 z-20 flex items-center gap-1 pointer-events-none">
                         👥 目前操場跳繩人數：<span class="text-emerald-600 text-base student-count-display">0</span>
@@ -330,7 +329,8 @@
         
         let students = [];
         let is3D = false;
-        let currentBgImage = '';
+        // 預設為筲官小籃球場半場
+        let currentBgImage = 'https://raw.githubusercontent.com/cychan-skwgps/P6MathsModelling_RopeSkippingPlanner_cychan-skwgps/refs/heads/cychan-skwgps-patch-1%E5%9C%96%E7%89%87%E7%89%88/%E7%AD%B2%E5%AE%98%E5%B0%8F%E7%B1%83%E7%90%83%E5%A0%B4%E5%8D%8A%E5%A0%B4.JPG';
 
         let toastTimeout;
         function showToast(msg) {
@@ -935,12 +935,14 @@
             const btnText = document.getElementById('btn-text');
             const btnIcon = document.getElementById('btn-icon');
             const sidebar = document.getElementById('sidebar');
+            const resetBtn = document.getElementById('reset-view-btn');
 
             if (is3D) {
                 v2d.classList.add('hidden');
                 inst2d.classList.add('hidden');
                 v3d.classList.remove('hidden');
                 inst3d.classList.remove('hidden');
+                resetBtn.classList.add('hidden');
                 
                 sidebar.classList.add('opacity-50', 'pointer-events-none');
                 btnText.innerText = "回到 2D 設計";
@@ -951,6 +953,7 @@
                 inst2d.classList.remove('hidden');
                 v3d.classList.add('hidden');
                 inst3d.classList.add('hidden');
+                resetBtn.classList.remove('hidden');
                 
                 sidebar.classList.remove('opacity-50', 'pointer-events-none');
                 btnText.innerText = "進入 3D 觀察";
