@@ -200,30 +200,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-sm text-gray-700 mb-2 flex items-center gap-2">🎨 顏色設定</h3>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex items-center justify-between">
-                            <label>畫布顏色</label>
-                            <input type="color" id="color-canvas" value="#e0f2fe" onchange="updateColors()" class="cursor-pointer h-7 w-7 rounded">
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <label class="font-medium">地面顏色</label>
-                            <input type="color" id="color-floor" value="#8B6057" onchange="currentBgImage=''; updateColors()" class="cursor-pointer h-7 w-7 rounded">
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <label>學生顏色</label>
-                            <input type="color" id="color-student" value="#f97316" class="cursor-pointer h-7 w-7 rounded">
-                        </div>
-                        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                            <label class="font-bold text-red-600">碰撞警示</label>
-                            <label class="switch">
-                                <input type="checkbox" id="collision-toggle" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
+
 
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-blue-100">
                     <h3 class="font-bold text-sm text-blue-800 mb-2">🧍 增加跳繩學生</h3>
@@ -271,7 +248,30 @@
                 
                 <button onclick="clearCanvas()" class="w-full py-1 text-red-400 hover:text-red-600 text-xs font-medium">清空所有學生</button>
             </div>
-
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-sm text-gray-700 mb-2 flex items-center gap-2">🎨 顏色設定</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center justify-between">
+                            <label>畫布顏色</label>
+                            <input type="color" id="color-canvas" value="#e0f2fe" onchange="updateColors()" class="cursor-pointer h-7 w-7 rounded">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label class="font-medium">地面顏色</label>
+                            <input type="color" id="color-floor" value="#8B6057" onchange="currentBgImage=''; updateColors()" class="cursor-pointer h-7 w-7 rounded">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label>學生顏色</label>
+                            <input type="color" id="color-student" value="#f97316" class="cursor-pointer h-7 w-7 rounded">
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                            <label class="font-bold text-red-600">碰撞警示</label>
+                            <label class="switch">
+                                <input type="checkbox" id="collision-toggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             <div class="lg:col-span-3 flex flex-col gap-3 h-full min-h-0">
                 
                 <div id="view-2d" class="rounded-3xl flex-1 min-h-0 flex items-center justify-center overflow-hidden relative transition-colors duration-300 select-none border border-gray-100 bg-white">
