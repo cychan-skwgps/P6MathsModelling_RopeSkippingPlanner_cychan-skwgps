@@ -166,8 +166,8 @@
                 <p class="text-sm text-gray-500">規劃你的跳繩隊伍，觀察 3D 跳躍效果 - 筲箕灣官立小學 陳俊諺老師</p>
             </div>
             <div class="flex gap-2">
-                <button id="reset-view-btn" onclick="reset2DView()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full font-bold shadow-lg transition-all flex items-center gap-2 text-sm md:text-base">
-                    <span>🎯</span> <span>重設畫布視角</span>
+                <button id="reset-view-btn" onclick="resetView()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full font-bold shadow-lg transition-all flex items-center gap-2 text-sm md:text-base">
+                    <span>🎯</span> <span>重設視角</span>
                 </button>
                 <button id="view-mode-btn" onclick="toggleView()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-full font-bold shadow-lg transition-all flex items-center gap-2 text-sm md:text-base">
                     <span id="btn-icon">🚀</span> <span id="btn-text">進入 3D 觀察</span>
@@ -329,7 +329,6 @@
         
         let students = [];
         let is3D = false;
-        // 預設為筲官小籃球場半場
         let currentBgImage = 'https://raw.githubusercontent.com/cychan-skwgps/P6MathsModelling_RopeSkippingPlanner_cychan-skwgps/refs/heads/cychan-skwgps-patch-1%E5%9C%96%E7%89%87%E7%89%88/%E7%AD%B2%E5%AE%98%E5%B0%8F%E7%B1%83%E7%90%83%E5%A0%B4%E5%8D%8A%E5%A0%B4.JPG';
 
         let toastTimeout;
@@ -345,15 +344,12 @@
             }, 2000); 
         }
 
-        // 🌟 新增：微調佔位大小的處理函式 🌟
         function adjustStudentSize(amount) {
             const sizeInput = document.getElementById('student-size');
             let currentVal = parseFloat(sizeInput.value);
             if (isNaN(currentVal)) currentVal = 2.0;
             
-            // 使用 toFixed(2) 解決 JavaScript 浮點數精度問題 (例如防止出現 2.100000002)
             let newVal = parseFloat((currentVal + amount).toFixed(2));
-            
             if (newVal < 0.5) {
                 newVal = 0.5;
                 showToast("最少佔位大小為 0.5 米！");
@@ -361,7 +357,7 @@
             sizeInput.value = newVal;
         }
 
-        // --- 2D 畫布觸控與滑鼠控制 ---
+        // --- 智能重設視角功能（2D/3D 通用） ---
         let transform2D = { x: 0, y: 0, scale: 1 };
         let isPanning2D = false;
         let lastMouseX, lastMouseY;
@@ -374,9 +370,20 @@
             outerContainer.style.transform = `translate(${transform2D.x}px, ${transform2D.y}px) scale(${transform2D.scale})`;
         }
 
-        function reset2DView() {
-            transform2D = { x: 0, y: 0, scale: 1 };
-            updateTransform2D();
+        // 整合 2D 與 3D 的視角重設
+        function resetView() {
+            if (is3D) {
+                // 如果在 3D 模式，重設 3D 相機位置及軌道控制器中心點
+                if (camera && controls) {
+                    camera.position.set(0, 12, 20);
+                    controls.target.set(0, 0, 0);
+                    controls.update();
+                }
+            } else {
+                // 如果在 2D 模式，重設 2D 畫布
+                transform2D = { x: 0, y: 0, scale: 1 };
+                updateTransform2D();
+            }
         }
 
         view2dContainer.addEventListener('contextmenu', e => e.preventDefault());
@@ -589,9 +596,6 @@
             el.style.borderRadius = type === 'circle' ? '50%' : '0';
             el.innerHTML = `<span>${size}m</span>`;
 
-            let lastTapTime = 0;
-
-           // --- 改為長按刪除邏輯 ---
             let pressTimer = null;
             let isLongPress = false;
 
@@ -603,18 +607,11 @@
 
                 isLongPress = false;
                 
-                // 設定長按計時器（例如 800 毫秒判定為長按）
                 pressTimer = setTimeout(() => {
                     isLongPress = true;
-                    
-                    // 觸發視覺提示（例如縮小並變透明，讓使用者知道即將刪除）
                     el.style.transform = 'scale(0.5)';
                     el.style.opacity = '0';
-                    
-                    // 從資料庫移除
                     students = students.filter(s => s.id !== id);
-                    
-                    // 延遲 100 毫秒等縮放動畫完成後從 DOM 移除
                     setTimeout(() => {
                         el.remove();
                         updateStudentCount();
@@ -628,15 +625,12 @@
                 el.setPointerCapture(e.pointerId);
 
                 const onPointerMove = (moveEvent) => {
-                    // 如果使用者開始移動，且移動距離超過一定範圍，就取消長按刪除
-                    const currentRect = el.getBoundingClientRect();
                     let dx = moveEvent.clientX - e.clientX;
                     let dy = moveEvent.clientY - e.clientY;
                     if (Math.hypot(dx, dy) > 5) {
                         clearTimeout(pressTimer);
                     }
 
-                    // 如果已經觸發長按刪除，就不執行後續的拖曳邏輯
                     if (isLongPress) return;
 
                     const pgRect = pg2d.getBoundingClientRect();
@@ -718,9 +712,7 @@
                 };
 
                 const onPointerUp = (upEvent) => {
-                    // 放開手指時，如果還沒到長按時間，就清除計時器（正常移動或短點擊）
                     clearTimeout(pressTimer);
-                    
                     el.releasePointerCapture(upEvent.pointerId);
                     el.removeEventListener('pointermove', onPointerMove);
                     el.removeEventListener('pointerup', onPointerUp);
@@ -935,14 +927,12 @@
             const btnText = document.getElementById('btn-text');
             const btnIcon = document.getElementById('btn-icon');
             const sidebar = document.getElementById('sidebar');
-            const resetBtn = document.getElementById('reset-view-btn');
 
             if (is3D) {
                 v2d.classList.add('hidden');
                 inst2d.classList.add('hidden');
                 v3d.classList.remove('hidden');
                 inst3d.classList.remove('hidden');
-                resetBtn.classList.add('hidden');
                 
                 sidebar.classList.add('opacity-50', 'pointer-events-none');
                 btnText.innerText = "回到 2D 設計";
@@ -953,7 +943,6 @@
                 inst2d.classList.remove('hidden');
                 v3d.classList.add('hidden');
                 inst3d.classList.add('hidden');
-                resetBtn.classList.remove('hidden');
                 
                 sidebar.classList.remove('opacity-50', 'pointer-events-none');
                 btnText.innerText = "進入 3D 觀察";
@@ -985,21 +974,17 @@
             // ==========================================
             // 🛡️ 終極防禦：禁止 iPad Safari 全網頁外殼放大
             // ==========================================
-            
-            // 1. 禁止多指捏合放大網頁外殼（不影響 2D 畫布內建的捏合縮放）
             document.addEventListener('touchstart', function (event) {
                 if (event.touches.length > 1) {
                     event.preventDefault();
                 }
             }, { passive: false });
 
-            // 2. 精準攔截空白處、非表單控制項的快速雙擊，防止 Safari 強制排版放大
             let lastTouchEnd = 0;
             document.addEventListener('touchend', function (event) {
                 const now = (new Date()).getTime();
                 if (now - lastTouchEnd <= 300) {
                     const target = event.target;
-                    // 當在非功能按鈕/輸入框的區域雙擊時，直接阻斷原生放大
                     if (!target.closest('button') && !target.closest('input') && !target.closest('select')) {
                         event.preventDefault();
                     }
