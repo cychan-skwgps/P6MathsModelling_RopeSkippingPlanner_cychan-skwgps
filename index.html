@@ -163,7 +163,7 @@
         <header class="mb-4 flex justify-between items-center flex-wrap gap-4 flex-shrink-0">
             <div>
                 <h1 class="text-2xl md:text-3xl font-extrabold text-emerald-700">🏃‍♂️ 跳繩空間模擬器</h1>
-                <p class="text-sm text-gray-500">規劃你的跳繩隊伍，觀察 3D 跳躍效果 - 筲箕灣官立小學 陳俊諺老師</p>
+                <p class="text-sm text-gray-500">設定學生所需的跳繩空間，規劃跳繩位置，觀察3D排列效果 - 筲箕灣官立小學 陳俊諺老師</p>
             </div>
             <div class="flex gap-2">
                 <button id="reset-view-btn" onclick="resetView()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full font-bold shadow-lg transition-all flex items-center gap-2 text-sm md:text-base">
@@ -191,12 +191,12 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2 mb-1">
-                        <button onclick="setQuickSize(11.5, 18, 'https://raw.githubusercontent.com/cychan-skwgps/P6MathsModelling_RopeSkippingPlanner_cychan-skwgps/refs/heads/main/%E7%AD%B2%E5%AE%98%E5%B0%8F%E7%B1%83%E7%90%83%E5%A0%B4%E5%85%A8%E5%A0%B4.JPG')" class="text-[10px] bg-blue-50 text-blue-600 py-1 rounded hover:bg-blue-100 transition font-bold border border-blue-200">筲官小籃球場全場</button>
-                        <button onclick="setQuickSize(11.5, 9, 'https://raw.githubusercontent.com/cychan-skwgps/P6MathsModelling_RopeSkippingPlanner_cychan-skwgps/refs/heads/main/%E7%AD%B2%E5%AE%98%E5%B0%8F%E7%B1%83%E7%90%83%E5%A0%B4%E5%8D%8A%E5%A0%B4.JPG')" class="text-[10px] bg-blue-50 text-blue-600 py-1 rounded hover:bg-blue-100 transition font-bold border border-blue-200">筲官小籃球場半場</button>
+                        <button onclick="setQuickSize(11.5, 18, 'https://raw.githubusercontent.com/cychan-skwgps/P6MathsModelling_RopeSkippingPlanner_cychan-skwgps/refs/heads/main/%E7%AD%B2%E5%AE%98%E5%B0%8F%E7%B1%83%E7%90%83%E5%A0%B4%E5%85%A8%E5%A0%B4.JPG')" class="text-[10px] bg-blue-50 text-blue-600 py-1 rounded hover:bg-blue-100 transition font-bold border border-blue-200">筲官小籃球場(全場)</button>
+                        <button onclick="setQuickSize(11.5, 9, 'https://raw.githubusercontent.com/cychan-skwgps/P6MathsModelling_RopeSkippingPlanner_cychan-skwgps/refs/heads/main/%E7%AD%B2%E5%AE%98%E5%B0%8F%E7%B1%83%E7%90%83%E5%A0%B4%E5%8D%8A%E5%A0%B4.JPG')" class="text-[10px] bg-blue-50 text-blue-600 py-1 rounded hover:bg-blue-100 transition font-bold border border-blue-200">筲官小籃球場(半場)</button>
                     </div>
                     <div class="grid grid-cols-2 gap-2 mb-1">
-                        <button onclick="setQuickSize(15, 28)" class="text-[10px] bg-emerald-50 text-emerald-600 py-1 rounded hover:bg-emerald-100 transition font-bold border border-emerald-200">全個籃球場</button>
-                        <button onclick="setQuickSize(15, 14)" class="text-[10px] bg-emerald-50 text-emerald-600 py-1 rounded hover:bg-emerald-100 transition font-bold border border-emerald-200">半個籃球場</button>
+                        <button onclick="setQuickSize(15, 28)" class="text-[10px] bg-emerald-50 text-emerald-600 py-1 rounded hover:bg-emerald-100 transition font-bold border border-emerald-200">籃球場(全場)</button>
+                        <button onclick="setQuickSize(15, 14)" class="text-[10px] bg-emerald-50 text-emerald-600 py-1 rounded hover:bg-emerald-100 transition font-bold border border-emerald-200">籃球場(半場)</button>
                     </div>
                 </div>
 
@@ -206,7 +206,7 @@
                     <h3 class="font-bold text-sm text-blue-800 mb-2">🧍 增加跳繩學生</h3>
                     <div class="space-y-3">
                         <div class="p-3 bg-blue-50 rounded-xl">
-                            <label class="block text-[11px] font-bold text-blue-600 mb-1">設定佔位大小（米）（正方形邊長／圓形直徑）:</label>
+                            <label class="block text-[11px] font-bold text-blue-600 mb-1">所需的跳繩空間（正方形邊長／圓形直徑）（米）:</label>
                             <input type="number" id="student-size" value="2" step="0.5" min="0.5" oninput="if(value<0.5 && value!=='') value=0.5" class="w-full p-1.5 rounded border-none shadow-inner mb-2 text-sm">
                             
                             <div class="grid grid-cols-3 gap-1 mb-2">
@@ -238,8 +238,8 @@
                                 <label class="text-xs font-bold text-gray-500">磁吸角度</label>
                                 <select id="snap-angle-step" class="w-16 p-0.5 text-center rounded border border-gray-200 text-xs shadow-inner outline-none">
                                     <option value="2">90°</option>
-                                    <option value="4" selected>45°</option>
-                                    <option value="6">30°</option>
+                                    <option value="4">45°</option>
+                                    <option value="6"selected>30°</option>
                                 </select>
                             </div>
                         </div>
