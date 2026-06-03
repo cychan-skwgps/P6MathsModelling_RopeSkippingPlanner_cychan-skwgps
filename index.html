@@ -701,9 +701,9 @@
                             const isDiagonal = !isAxis;
                         
                             let gap = 0;
-                           <!--if (isDiagonal) {
-                                gap = parseFloat(document.getElementById('snap-gap').value) || 0;
-                            }-->
+                           if (isDiagonal) {
+                                gap = 0;
+                            }
                             const idealDist = r1 + r2 + gap;
                         
                             cx1 = cx2 + idealDist * Math.cos(snappedAngle);
