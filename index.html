@@ -230,8 +230,8 @@
             </div>
 
             <div id="input-group-rect" class="hidden">
-                <label class="block text-[11px] font-bold text-purple-600 mb-0.5">長方形 - 闊度 (X軸) (米):</label>
-                <input type="number" id="student-rect-w" value="2" step="0.5" min="0.5" oninput="if(value<0.5 && value!=='') value=0.5" class="w-full p-1.5 rounded border-none shadow-inner mb-1 text-sm">
+                <label class="block text-[11px] font-bold text-purple-600 mb-0.5">長方形 - 闊度 (米):</label>
+                <input type="number" id="student-rect-w" value="1.5" step="0.5" min="0.5" oninput="if(value<0.5 && value!=='') value=0.5" class="w-full p-1.5 rounded border-none shadow-inner mb-1 text-sm">
                 <div class="grid grid-cols-3 gap-1 mb-2">
                     <button onclick="adjustStudentSize('student-rect-w', -1)" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-0.5 text-[10px] rounded">-1m</button>
                     <button onclick="adjustStudentSize('student-rect-w', -0.1)" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-0.5 text-[10px] rounded">-0.1m</button>
@@ -241,7 +241,7 @@
                     <button onclick="adjustStudentSize('student-rect-w', 0.01)" class="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold py-0.5 text-[10px] rounded">+0.01m</button>
                 </div>
 
-                <label class="block text-[11px] font-bold text-purple-600 mb-0.5">長方形 - 長度 (Z軸) (米):</label>
+                <label class="block text-[11px] font-bold text-purple-600 mb-0.5">長方形 - 長度 (米):</label>
                 <input type="number" id="student-rect-h" value="3" step="0.5" min="0.5" oninput="if(value<0.5 && value!=='') value=0.5" class="w-full p-1.5 rounded border-none shadow-inner mb-1 text-sm">
                 <div class="grid grid-cols-3 gap-1 mb-3">
                     <button onclick="adjustStudentSize('student-rect-h', -1)" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-0.5 text-[10px] rounded">-1m</button>
@@ -862,13 +862,25 @@ function init3D() {
         const legR = legL.clone(); legR.position.set(0.1, 0.3, 0); stickmanGroup.add(legL, legR);
 
         // 跳繩半徑取長和闊中較小的一邊以防止穿幫
-        const ropeRadius = 0.8; // 固定高度，確保能完美繞過頭頂(約1.55m)與腳底(0m)
-        const ropeGeo = new THREE.TorusGeometry(ropeRadius, 0.03, 16, 100);
-        const ropeMat = new THREE.MeshBasicMaterial({ color: 0xffffcc }); 
-        const ropeMesh = new THREE.Mesh(ropeGeo, ropeMat);
+        // 1. 固定高度半徑 0.8m (總高 1.6m)，確保能順利繞過火柴人頭頂與腳底
+        const baseRopeHeight = 0.8; 
+        const ropeGeo = new THREE.TorusGeometry(baseRopeHeight, 0.03, 16, 100);
+        const ropeMesh = new THREE.Mesh(ropeGeo, new THREE.MeshBasicMaterial({ color: 0xffffcc }));
         
-        ropeMesh.position.y = 0.8; // 繩圈中心對齊身體中央
-        ropeMesh.scale.set(0.55, 1, 1); // 將 X 軸壓扁成橢圓，使其完美銜接火柴人的雙手位置
+        // 繩圈中心對齊身體中央
+        ropeMesh.position.y = 0.8;
+
+        // 2. 動態計算繩圈闊度：
+        // 讓繩子的闊度等於「學生佔位闊度 (s.rectW)」的 90%，確保繩圈不會超出地台邊界
+        // 同時設定下限為 0.8m，防止佔位設得太小（如0.5m）時，繩圈向內擠壓切斷火柴人的手臂
+        const targetRopeWidth = Math.max(0.8, s.rectW * 0.9);
+        
+        // 計算 X 軸應該縮放的比例
+        const scaleX = (targetRopeWidth / 2) / baseRopeHeight;
+
+        // 3. 套用縮放：只拉寬或壓扁 X 軸，Y 和 Z 軸保持不變
+        ropeMesh.scale.set(scaleX, 1, 1); 
+
         stickmanGroup.add(ropeMesh);
 
         group.add(stickmanGroup);
