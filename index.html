@@ -862,10 +862,13 @@ function init3D() {
         const legR = legL.clone(); legR.position.set(0.1, 0.3, 0); stickmanGroup.add(legL, legR);
 
         // 跳繩半徑取長和闊中較小的一邊以防止穿幫
-        const ropeRadius = Math.min(s.rectW, s.rectH) / 2;
+        const ropeRadius = 0.8; // 固定高度，確保能完美繞過頭頂(約1.55m)與腳底(0m)
         const ropeGeo = new THREE.TorusGeometry(ropeRadius, 0.03, 16, 100);
-        const ropeMesh = new THREE.Mesh(ropeGeo, new THREE.MeshBasicMaterial({ color: 0xffffcc }));
-        ropeMesh.position.y = 0.8;
+        const ropeMat = new THREE.MeshBasicMaterial({ color: 0xffffcc }); 
+        const ropeMesh = new THREE.Mesh(ropeGeo, ropeMat);
+        
+        ropeMesh.position.y = 0.8; // 繩圈中心對齊身體中央
+        ropeMesh.scale.set(0.55, 1, 1); // 將 X 軸壓扁成橢圓，使其完美銜接火柴人的雙手位置
         stickmanGroup.add(ropeMesh);
 
         group.add(stickmanGroup);
