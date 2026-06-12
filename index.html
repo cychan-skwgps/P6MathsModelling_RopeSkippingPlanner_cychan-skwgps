@@ -10,6 +10,10 @@
     <style>
         html, body { height: 100%; margin: 0; overflow: hidden; }
         body { background-color: #f8fafc; }
+        /* 🎯 新增：防止手機雙擊按鈕、輸入框、下拉選單時畫面放大 */
+button, input, select {
+    touch-action: manipulation;
+}
         
         /* 側邊欄專用滾動條美化 */
         #sidebar::-webkit-scrollbar { width: 4px; }
